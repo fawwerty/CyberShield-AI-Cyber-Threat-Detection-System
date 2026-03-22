@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "CyberShield",
+    "slug": "cybershield-threat-detector",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": ["**/*"],
+    "platforms": ["ios", "android"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cybershield.threatdetector"
+    },
+    "android": {
+      "package": "com.cybershield.threatdetector"
+    }
+  }
+}

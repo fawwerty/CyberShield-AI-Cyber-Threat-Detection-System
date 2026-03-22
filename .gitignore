@@ -1,0 +1,9 @@
+﻿node_modules/
+.venv/
+__pycache__/
+*.pkl
+*.pt
+*.h5
+*.bin
+.expo/
+*.log

@@ -1,0 +1,83 @@
+{
+  "timestamp": "2026-03-21 16:23:47",
+  "dataset_rows": 292837,
+  "feature_count": 20,
+  "features": [
+    "duration",
+    "protocol_type",
+    "src_bytes",
+    "dst_bytes",
+    "land",
+    "wrong_fragment",
+    "urgent",
+    "hot",
+    "num_failed_logins",
+    "logged_in",
+    "num_compromised",
+    "root_shell",
+    "su_attempted",
+    "num_root",
+    "num_file_creations",
+    "num_shells",
+    "num_access_files",
+    "count",
+    "srv_count",
+    "dst_host_count"
+  ],
+  "label_distribution": {
+    "2": 100000,
+    "0": 100000,
+    "1": 92837
+  },
+  "rf_classification_report": {
+    "Normal": {
+      "precision": 0.9902664191460538,
+      "recall": 0.98685,
+      "f1-score": 0.9885552578197391,
+      "support": 20000.0
+    },
+    "Suspicious": {
+      "precision": 0.9903774190099434,
+      "recall": 0.9977380439465747,
+      "f1-score": 0.9940441058110211,
+      "support": 18568.0
+    },
+    "Malicious": {
+      "precision": 0.9954342481561387,
+      "recall": 0.992,
+      "f1-score": 0.9937141569206882,
+      "support": 20000.0
+    },
+    "accuracy": 0.9920605108591722,
+    "macro avg": {
+      "precision": 0.992026028770712,
+      "recall": 0.9921960146488583,
+      "f1-score": 0.9921045068504828,
+      "support": 58568.0
+    },
+    "weighted avg": {
+      "precision": 0.992066337628406,
+      "recall": 0.9920605108591722,
+      "f1-score": 0.9920570832452463,
+      "support": 58568.0
+    }
+  },
+  "rf_confusion_matrix": [
+    [
+      19737,
+      178,
+      85
+    ],
+    [
+      36,
+      18526,
+      6
+    ],
+    [
+      158,
+      2,
+      19840
+    ]
+  ],
+  "lstm_threshold": 0.6876019239425659
+}
