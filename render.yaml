@@ -1,5 +1,4 @@
 services:
-  # ─── Backend Service (FastAPI) ─────────────────────────────────────────────
   - type: web
     name: cybershield-api
     env: python
@@ -14,21 +13,13 @@ services:
         generateValue: true
       - key: DB_NAME
         value: cybershield
-      - key: PYTHON_VERSION
-        value: 3.10.0
 
-  # ─── Frontend Service (React + Vite) ───────────────────────────────────────
-  - type: web
+  - type: static_site
     name: cybershield-web
-    static: true
     rootDir: frontend
     plan: free
     buildCommand: npm install && npm run build
     publishPath: dist
-    headers:
-      - path: /*
-        name: Cache-Control
-        value: no-cache
     envVars:
       - key: VITE_API_URL
         fromService:
