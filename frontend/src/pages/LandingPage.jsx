@@ -87,10 +87,6 @@ export default function LandingPage() {
                 alt="Cyber Dashboard" 
                 className="rounded-lg shadow-2xl grayscale hover:grayscale-0 transition-all duration-700"
               />
-              <div className="absolute top-4 right-4 bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 px-3 py-1.5 rounded-full flex items-center gap-2">
-                <div className="pulse-dot bg-emerald-500" />
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">System Live</span>
-              </div>
             </div>
             
             {/* Floating Mini-cards */}
@@ -173,7 +169,6 @@ export default function LandingPage() {
               { label: "Integrations", value: "250+" },
             ].map((stat, i) => (
               <div key={i}>
-                <h1 className="text-4xl font-extrabold tracking-tight font-display">CyberShield <span className="text-accent underline decoration-accent/20">Command</span></h1>
                 <p className="text-4xl font-extrabold mb-2 font-display text-accent">{stat.value}</p>
                 <p className="text-xs uppercase tracking-widest text-text-muted font-bold">{stat.label}</p>
               </div>

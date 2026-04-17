@@ -65,6 +65,7 @@ export default function LoginPage() {
               <label className="text-xs font-bold uppercase tracking-widest text-text-dim ml-1">Email Address</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
+                 <input 
                   type="email" 
                   required
                   placeholder="name@company.com"
@@ -82,6 +83,7 @@ export default function LoginPage() {
               </div>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
+                 <input 
                   type={showPassword ? "text" : "password"} 
                   required
                   placeholder="••••••••"
