@@ -106,10 +106,11 @@ h1, h2, h3, h4, .font-display {
   width: 100%;
   height: 100%;
   z-index: -1;
+  pointer-events: none;
   background-color: #020617;
   background-image: 
-    linear-gradient(to bottom, rgba(2, 6, 23, 0.5), rgba(2, 6, 23, 0.7)),
-    url('/bg-network.jpg');
+    linear-gradient(to bottom, rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.9)),
+    url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2000');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;

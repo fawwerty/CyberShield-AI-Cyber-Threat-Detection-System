@@ -74,6 +74,9 @@ export default function RegisterPage() {
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors pointer-events-none" size={18} />
                    <input 
                     type="text" 
+                    id="firstName"
+                    name="firstName"
+                    autoComplete="given-name"
                     required
                     placeholder="John"
                     value={formData.firstName}
@@ -84,10 +87,13 @@ export default function RegisterPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-text-dim ml-1">Last Name</label>
-                <div className="relative group">
+               <div className="relative group">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors pointer-events-none" size={18} />
                    <input 
                     type="text" 
+                    id="lastName"
+                    name="lastName"
+                    autoComplete="family-name"
                     required
                     placeholder="Doe"
                     value={formData.lastName}
@@ -104,6 +110,9 @@ export default function RegisterPage() {
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors pointer-events-none" size={18} />
                  <input 
                   type="email" 
+                  id="email"
+                  name="email"
+                  autoComplete="email"
                   required
                   placeholder="john@example.com"
                   value={formData.email}
@@ -119,6 +128,9 @@ export default function RegisterPage() {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors pointer-events-none" size={18} />
                  <input 
                   type="password" 
+                  id="password"
+                  name="password"
+                  autoComplete="new-password"
                   required
                   placeholder="••••••••"
                   value={formData.password}

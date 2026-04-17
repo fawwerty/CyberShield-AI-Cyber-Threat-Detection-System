@@ -67,6 +67,9 @@ export default function LoginPage() {
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors pointer-events-none" size={18} />
                  <input 
                   type="email" 
+                  id="email"
+                  name="email"
+                  autoComplete="email"
                   required
                   placeholder="name@company.com"
                   value={formData.email}
@@ -85,6 +88,9 @@ export default function LoginPage() {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors pointer-events-none" size={18} />
                  <input 
                   type={showPassword ? "text" : "password"} 
+                  id="password"
+                  name="password"
+                  autoComplete="current-password"
                   required
                   placeholder="••••••••"
                   value={formData.password}
