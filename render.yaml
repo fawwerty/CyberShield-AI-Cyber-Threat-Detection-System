@@ -1,0 +1,37 @@
+services:
+  # ─── Backend Service (FastAPI) ─────────────────────────────────────────────
+  - type: web
+    name: cybershield-api
+    env: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MONGODB_URI
+        sync: false # User will provide this in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_NAME
+        value: cybershield
+      - key: PYTHON_VERSION
+        value: 3.10.0
+
+  # ─── Frontend Service (React + Vite) ───────────────────────────────────────
+  - type: web
+    name: cybershield-web
+    env: static
+    rootDir: frontend
+    plan: free
+    buildCommand: npm install && npm run build
+    publishPath: dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: cybershield-api
+          property: host

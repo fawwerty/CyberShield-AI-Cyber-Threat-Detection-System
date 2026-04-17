@@ -8,10 +8,26 @@ import LogsPage from "./pages/Logs";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+
+/**
+ * ProtectedRoute — Guards routes against unauthenticated users
+ */
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) return null; // Or a spinner
+  
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+}
 
 /**
  * AppLayout — Conditional layout wrapper
- * Shows Sidebar only on authenticated-style dashboard routes.
  */
 function AppLayout({ children }) {
   const location = useLocation();
@@ -35,25 +51,39 @@ function AppLayout({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppLayout>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <AppLayout>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-          {/* Protected-style Routes */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/analyze" element={<AnalyzePage />} />
-          <Route path="/alerts" element={<AlertsPage />} />
-          <Route path="/logs" element={<LogsPage />} />
-          
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AppLayout>
-    </BrowserRouter>
+            {/* Protected Routes */}
+            <Route 
+              path="/dashboard" 
+              element={<ProtectedRoute><Dashboard /></ProtectedRoute>} 
+            />
+            <Route 
+              path="/analyze" 
+              element={<ProtectedRoute><AnalyzePage /></ProtectedRoute>} 
+            />
+            <Route 
+              path="/alerts" 
+              element={<ProtectedRoute><AlertsPage /></ProtectedRoute>} 
+            />
+            <Route 
+              path="/logs" 
+              element={<ProtectedRoute><LogsPage /></ProtectedRoute>} 
+            />
+            
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AppLayout>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

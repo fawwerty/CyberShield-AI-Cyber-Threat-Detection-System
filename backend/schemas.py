@@ -92,3 +92,23 @@ class AlertResponse(BaseModel):
     destination_ip: Optional[str] = None
     protocol: Optional[str] = None
     ensemble_votes: Dict[str, Any] = Field(default_factory=dict)
+
+
+# ─── Auth Schemas ─────────────────────────────────────────────────────────────
+
+class UserRegister(BaseModel):
+    """Schema for new user registration."""
+    email: str = Field(..., example="admin@cybershield.ai")
+    password: str = Field(..., min_length=8)
+    full_name: str = Field(..., example="System Administrator")
+
+class UserLogin(BaseModel):
+    """Schema for user authentication."""
+    email: str = Field(..., example="admin@cybershield.ai")
+    password: str = Field(...)
+
+class Token(BaseModel):
+    """JWT Token response."""
+    access_token: str
+    token_type: str = "bearer"
+    user: Dict[str, Any]

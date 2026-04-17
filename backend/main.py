@@ -8,17 +8,21 @@ import json
 import logging
 import os
 import uuid
+import jwt
 from collections import deque
-from datetime import datetime
-from typing import List, Optional
+from datetime import datetime, timedelta
+from typing import List, Optional, Any, Dict
 
 import numpy as np
 import pandas as pd
-from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
+from passlib.context import CryptContext
 from pydantic import BaseModel
 
 from inference import EnsembleInference
+from database import get_db
 from schemas import (
     AlertResponse,
     AnalyzeRequest,
@@ -26,7 +30,20 @@ from schemas import (
     BatchAnalyzeResponse,
     HealthResponse,
     StatsResponse,
+    UserRegister,
+    UserLogin,
+    Token,
 )
+
+# ─── Configuration ──────────────────────────────────────────────────────────
+load_dotenv = lambda: None # Mock if not using python-dotenv directly here
+SECRET_KEY = os.getenv("JWT_SECRET", "cybershield-ultra-secret-key-2024")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24 hours
+
+# ─── Auth Setup ─────────────────────────────────────────────────────────────
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 # ─── Logging Setup ───────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -39,26 +56,22 @@ logger = logging.getLogger("cyber-detector")
 app = FastAPI(
     title="AI Cybersecurity Threat Detector",
     description="Ensemble ML/DL model for network anomaly detection",
-    version="1.0.0",
+    version="1.1.0",
 )
 
-# Allow React (3000) and Expo (19006) origins
+# CORS logic
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:19006", "*"],
+    allow_origins=["*"], # In production, restrict this to verified Vercel domains
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ─── In-Memory Alert Store (replace with DB in production) ───────────────────
-MAX_ALERTS = 500
-alert_store: deque = deque(maxlen=MAX_ALERTS)
+# ─── Persistence & Model ──────────────────────────────────────────────────────
+db = get_db()
 connected_websockets: List[WebSocket] = []
-
-# ─── Load Ensemble Model at Startup ──────────────────────────────────────────
 inference_engine: Optional[EnsembleInference] = None
-
 
 @app.on_event("startup")
 async def startup_event():
@@ -71,10 +84,40 @@ async def startup_event():
         logger.warning(f"⚠️  Model not loaded (train first): {e}")
         inference_engine = None
 
+# ─── Auth Utilities ──────────────────────────────────────────────────────────
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except jwt.PyJWTError:
+        raise credentials_exception
+    
+    user = db.users.find_one({"email": email})
+    if user is None:
+        raise credentials_exception
+    return user
 
 # ─── WebSocket Manager ────────────────────────────────────────────────────────
 async def broadcast_alert(alert: dict):
-    """Push new alert to all connected WebSocket clients."""
     disconnected = []
     for ws in connected_websockets:
         try:
@@ -82,61 +125,74 @@ async def broadcast_alert(alert: dict):
         except Exception:
             disconnected.append(ws)
     for ws in disconnected:
-        connected_websockets.remove(ws)
-
+        if ws in connected_websockets:
+            connected_websockets.remove(ws)
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     connected_websockets.append(websocket)
-    logger.info(f"WebSocket client connected. Total: {len(connected_websockets)}")
     try:
-        # Send last 10 alerts on connect
-        recent = list(alert_store)[-10:]
+        # Send history from DB
+        recent = list(db.logs.find().sort("timestamp", -1).limit(10))
+        for r in recent: r["_id"] = str(r["_id"])
         await websocket.send_json({"type": "history", "alerts": recent})
         while True:
-            # Keep connection alive
             await asyncio.sleep(30)
             await websocket.send_json({"type": "ping"})
     except WebSocketDisconnect:
-        connected_websockets.remove(websocket)
-        logger.info("WebSocket client disconnected")
+        if websocket in connected_websockets:
+            connected_websockets.remove(websocket)
 
+# ─── Auth Endpoints ───────────────────────────────────────────────────────────
+@app.post("/auth/register", tags=["Auth"])
+async def register(user: UserRegister):
+    if db.users.find_one({"email": user.email}):
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    user_dict = {
+        "email": user.email,
+        "password": get_password_hash(user.password),
+        "full_name": user.full_name,
+        "created_at": datetime.utcnow()
+    }
+    db.users.insert_one(user_dict)
+    return {"message": "User created successfully"}
 
-# ─── Health Endpoint ──────────────────────────────────────────────────────────
+@app.post("/auth/login", response_model=Token, tags=["Auth"])
+async def login(user: UserLogin):
+    db_user = db.users.find_one({"email": user.email})
+    if not db_user or not verify_password(user.password, db_user["password"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    access_token = create_access_token(data={"sub": db_user["email"]})
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "email": db_user["email"],
+            "full_name": db_user["full_name"]
+        }
+    }
+
+# ─── System & Analytics ───────────────────────────────────────────────────────
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 async def health_check():
-    """Returns API and model health status."""
     model_loaded = inference_engine is not None and inference_engine.is_ready()
     return HealthResponse(
         status="healthy" if model_loaded else "degraded",
         model_loaded=model_loaded,
-        model_type="Ensemble (IsolationForest + RandomForest + LSTM Autoencoder)",
+        model_type="Ensemble Neural Engine",
         timestamp=datetime.utcnow().isoformat(),
-        total_alerts=len(alert_store),
+        total_alerts=db.logs.count_documents({}),
     )
 
-
-# ─── Analyze Single Record ────────────────────────────────────────────────────
 @app.post("/analyze", response_model=AnalyzeResponse, tags=["Detection"])
-async def analyze_traffic(request: AnalyzeRequest):
-    """
-    Accepts a single network traffic record (feature dict) and returns
-    threat classification with confidence score.
-    """
+async def analyze_traffic(request: AnalyzeRequest, current_user: dict = Depends(get_current_user)):
     if inference_engine is None or not inference_engine.is_ready():
-        raise HTTPException(
-            status_code=503,
-            detail="Model not loaded. Please train the model first using: python model/train.py",
-        )
+        raise HTTPException(status_code=503, detail="Model engine offline")
 
-    try:
-        result = inference_engine.predict_single(request.features)
-    except Exception as e:
-        logger.error(f"Inference error: {e}")
-        raise HTTPException(status_code=500, detail=f"Inference failed: {str(e)}")
-
-    # Build alert object
+    result = inference_engine.predict_single(request.features)
     alert = {
         "id": str(uuid.uuid4()),
         "timestamp": datetime.utcnow().isoformat(),
@@ -148,137 +204,66 @@ async def analyze_traffic(request: AnalyzeRequest):
         "protocol": request.protocol or "unknown",
         "ensemble_votes": result["ensemble_votes"],
         "features": request.features,
+        "user_email": current_user["email"]
     }
 
-    # Store and broadcast alert if not normal
+    # Persistent storage
+    db.logs.insert_one(alert.copy())
+    
     if result["label"] != "Normal":
-        alert_store.append(alert)
-        await broadcast_alert({"type": "alert", "alert": alert})
-        logger.info(f"🚨 Threat detected: {result['label']} ({result['confidence']:.2%})")
+        alert_out = alert.copy()
+        if "_id" in alert_out: del alert_out["_id"]
+        await broadcast_alert({"type": "alert", "alert": alert_out})
+        logger.info(f"🚨 Threat detected: {result['label']}")
 
     return AnalyzeResponse(**alert)
 
-
-# ─── Batch Analyze from CSV Upload ───────────────────────────────────────────
-@app.post("/analyze/batch", response_model=BatchAnalyzeResponse, tags=["Detection"])
-async def analyze_batch(file: UploadFile = File(...)):
-    """
-    Upload a CSV file with multiple network records for batch analysis.
-    Returns a summary + list of threats detected.
-    """
-    if inference_engine is None or not inference_engine.is_ready():
-        raise HTTPException(status_code=503, detail="Model not loaded.")
-
-    if not file.filename.endswith(".csv"):
-        raise HTTPException(status_code=400, detail="Only CSV files are supported.")
-
-    try:
-        contents = await file.read()
-        df = pd.read_csv(pd.io.common.BytesIO(contents))
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"CSV parse error: {str(e)}")
-
-    results = []
-    threats_found = 0
-
-    for idx, row in df.iterrows():
-        if idx >= 1000:  # Cap batch size for performance
-            break
-        try:
-            features = row.to_dict()
-            result = inference_engine.predict_single(features)
-            alert = {
-                "id": str(uuid.uuid4()),
-                "timestamp": datetime.utcnow().isoformat(),
-                "label": result["label"],
-                "confidence": result["confidence"],
-                "severity": result["severity"],
-                "row_index": int(idx),
-                "ensemble_votes": result["ensemble_votes"],
-            }
-            results.append(alert)
-            if result["label"] != "Normal":
-                threats_found += 1
-                alert_store.append(alert)
-                await broadcast_alert({"type": "alert", "alert": alert})
-        except Exception as e:
-            logger.warning(f"Row {idx} failed: {e}")
-            continue
-
-    return BatchAnalyzeResponse(
-        total_analyzed=len(results),
-        threats_detected=threats_found,
-        normal_count=len(results) - threats_found,
-        results=results,
-    )
-
-
-# ─── Get All Alerts ───────────────────────────────────────────────────────────
 @app.get("/alerts", response_model=List[dict], tags=["Alerts"])
-async def get_alerts(
-    limit: int = 50,
-    label: Optional[str] = None,
-    severity: Optional[str] = None,
-):
-    """
-    Returns recent detected threat alerts.
-    Filter by label (Normal/Suspicious/Malicious) or severity (low/medium/high/critical).
-    """
-    alerts = list(alert_store)
-    alerts.reverse()  # Most recent first
+async def get_alerts(limit: int = 50, label: Optional[str] = None):
+    query = {}
+    if label: query["label"] = label
+    
+    cursor = db.logs.find(query).sort("timestamp", -1).limit(limit)
+    alerts = []
+    for doc in cursor:
+        doc["id"] = doc.get("id", str(doc.get("_id")))
+        del doc["_id"]
+        alerts.append(doc)
+    return alerts
 
-    if label:
-        alerts = [a for a in alerts if a.get("label", "").lower() == label.lower()]
-    if severity:
-        alerts = [a for a in alerts if a.get("severity", "").lower() == severity.lower()]
-
-    return alerts[:limit]
-
-
-# ─── Get Stats ────────────────────────────────────────────────────────────────
 @app.get("/stats", response_model=StatsResponse, tags=["Analytics"])
 async def get_stats():
-    """Returns summary statistics for the dashboard."""
-    all_alerts = list(alert_store)
-    total = len(all_alerts)
-    malicious = sum(1 for a in all_alerts if a.get("label") == "Malicious")
-    suspicious = sum(1 for a in all_alerts if a.get("label") == "Suspicious")
-    normal = sum(1 for a in all_alerts if a.get("label") == "Normal")
+    total = db.logs.count_documents({})
+    malicious = db.logs.count_documents({"label": "Malicious"})
+    suspicious = db.logs.count_documents({"label": "Suspicious"})
+    normal = db.logs.count_documents({"label": "Normal"})
 
-    # Severity breakdown
-    critical = sum(1 for a in all_alerts if a.get("severity") == "critical")
-    high = sum(1 for a in all_alerts if a.get("severity") == "high")
-    medium = sum(1 for a in all_alerts if a.get("severity") == "medium")
-    low = sum(1 for a in all_alerts if a.get("severity") == "low")
+    # Severity
+    crit = db.logs.count_documents({"severity": "critical"})
+    high = db.logs.count_documents({"severity": "high"})
+    med = db.logs.count_documents({"severity": "medium"})
+    low = db.logs.count_documents({"severity": "low"})
 
-    # Last 24 alerts for timeline (newest first, limit 24 for chart)
-    timeline = [
-        {"timestamp": a["timestamp"], "label": a["label"]}
-        for a in reversed(all_alerts[-24:])
-    ]
+    timeline_docs = db.logs.find({}, {"timestamp": 1, "label": 1}).sort("timestamp", -1).limit(24)
+    timeline = [{"timestamp": d["timestamp"], "label": d["label"]} for d in timeline_docs]
 
     return StatsResponse(
         total_analyzed=total,
         malicious_count=malicious,
         suspicious_count=suspicious,
         normal_count=normal,
-        critical_count=critical,
+        critical_count=crit,
         high_count=high,
-        medium_count=medium,
+        medium_count=med,
         low_count=low,
         timeline=timeline,
     )
 
-
-# ─── Clear Alerts ─────────────────────────────────────────────────────────────
 @app.delete("/alerts", tags=["Alerts"])
-async def clear_alerts():
-    """Clears all stored alerts (use with caution)."""
-    alert_store.clear()
-    return {"message": "All alerts cleared", "timestamp": datetime.utcnow().isoformat()}
+async def clear_alerts(current_user: dict = Depends(get_current_user)):
+    db.logs.delete_many({})
+    return {"message": "Logs cleared"}
 
-
-# ─── Run ──────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

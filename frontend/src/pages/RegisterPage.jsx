@@ -1,20 +1,37 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Shield, Mail, Lock, User, Github, Chrome, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Shield, Mail, Lock, User, Github, Chrome, ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({ 
+    firstName: "", 
+    lastName: "", 
+    email: "", 
+    password: "" 
+  });
+  
+  const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate reg
-    setTimeout(() => {
+    setError("");
+    
+    try {
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+      await register(fullName, formData.email, formData.password);
+      // Redirect to login on success
+      navigate("/login", { state: { message: "Account created! You can now sign in." } });
+    } catch (e) {
+      setError(e.message || "Registration failed. Please try again.");
+    } finally {
       setIsLoading(false);
-      navigate("/");
-    }, 1500);
+    }
   };
 
   return (
@@ -38,16 +55,29 @@ export default function RegisterPage() {
             <p className="text-text-muted text-sm">Join the next generation of cybersecurity experts.</p>
           </div>
 
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3"
+            >
+              <AlertCircle className="text-red-500" size={18} />
+              <p className="text-xs font-bold text-red-500">{error}</p>
+            </motion.div>
+          )}
+
           <form onSubmit={handleRegister} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-text-dim ml-1">First Name</label>
                 <div className="relative group">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
-                  <input 
+                   <input 
                     type="text" 
                     required
                     placeholder="John"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     className="w-full bg-surface/50 border border-card-border rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/10 transition-all"
                   />
                 </div>
@@ -56,10 +86,12 @@ export default function RegisterPage() {
                 <label className="text-xs font-bold uppercase tracking-widest text-text-dim ml-1">Last Name</label>
                 <div className="relative group">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
-                  <input 
+                   <input 
                     type="text" 
                     required
                     placeholder="Doe"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                     className="w-full bg-surface/50 border border-card-border rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/10 transition-all"
                   />
                 </div>
@@ -70,10 +102,12 @@ export default function RegisterPage() {
               <label className="text-xs font-bold uppercase tracking-widest text-text-dim ml-1">Email Address</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
-                <input 
+                 <input 
                   type="email" 
                   required
                   placeholder="john@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full bg-surface/50 border border-card-border rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/10 transition-all"
                 />
               </div>
@@ -83,10 +117,12 @@ export default function RegisterPage() {
               <label className="text-xs font-bold uppercase tracking-widest text-text-dim ml-1">Password</label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
-                <input 
+                 <input 
                   type="password" 
                   required
                   placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full bg-surface/50 border border-card-border rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/10 transition-all"
                 />
               </div>

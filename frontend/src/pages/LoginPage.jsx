@@ -1,21 +1,31 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Shield, Mail, Lock, Eye, EyeOff, Github, Chrome, ArrowRight } from "lucide-react";
+import { Shield, Mail, Lock, Eye, EyeOff, Github, Chrome, ArrowRight, AlertCircle } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate auth
-    setTimeout(() => {
+    setError("");
+    
+    try {
+      await login(formData.email, formData.password);
+      navigate("/dashboard");
+    } catch (e) {
+      setError(e.message || "Invalid credentials. Please try again.");
+    } finally {
       setIsLoading(false);
-      navigate("/");
-    }, 1500);
+    }
   };
 
   return (
@@ -39,15 +49,27 @@ export default function LoginPage() {
             <p className="text-text-muted text-sm">Enter your credentials to access the command center.</p>
           </div>
 
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3"
+            >
+              <AlertCircle className="text-red-500" size={18} />
+              <p className="text-xs font-bold text-red-500">{error}</p>
+            </motion.div>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-text-dim ml-1">Email Address</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
-                <input 
                   type="email" 
                   required
                   placeholder="name@company.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full bg-surface/50 border border-card-border rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/10 transition-all"
                 />
               </div>
@@ -60,10 +82,11 @@ export default function LoginPage() {
               </div>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
-                <input 
                   type={showPassword ? "text" : "password"} 
                   required
                   placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full bg-surface/50 border border-card-border rounded-xl py-3 pl-12 pr-12 text-sm focus:outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/10 transition-all"
                 />
                 <button 
