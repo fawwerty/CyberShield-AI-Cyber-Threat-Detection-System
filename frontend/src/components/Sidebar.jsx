@@ -1,90 +1,97 @@
 /**
- * Sidebar Navigation Component
+ * Sidebar Component
+ * Navigation menu for the web dashboard.
  */
-import React from "react";
-import { NavLink } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Upload,
-  ScrollText,
-  Bell,
-  Shield,
-  Activity,
-} from "lucide-react";
 
-const navItems = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/analyze", icon: Upload, label: "Analyze" },
-  { to: "/alerts", icon: Bell, label: "Alerts" },
-  { to: "/logs", icon: ScrollText, label: "Logs" },
+import React from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { 
+  Shield, LayoutDashboard, Brain, Bell, 
+  Terminal, Settings, LogOut, ChevronRight
+} from "lucide-react";
+import { motion } from "framer-motion";
+
+const NAV_ITEMS = [
+  { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/analyze", label: "Analyze", icon: Brain },
+  { path: "/alerts", label: "Alerts", icon: Bell },
+  { path: "/logs", label: "System Logs", icon: Terminal },
 ];
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+
   return (
-    <aside
-      className="flex flex-col w-64 min-h-screen border-r"
-      style={{
-        background: "var(--surface)",
-        borderColor: "var(--border)",
-      }}
-    >
-      {/* Logo */}
-      <div
-        className="flex items-center gap-3 px-6 py-5 border-b"
-        style={{ borderColor: "var(--border)" }}
+    <aside className="w-72 h-screen p-6 sticky top-0 border-r border-card-border flex flex-col">
+      {/* Brand */}
+      <div 
+        onClick={() => navigate("/")}
+        className="flex items-center gap-3 mb-12 cursor-pointer group px-2"
       >
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center glow-accent"
-          style={{ background: "rgba(0,212,255,0.15)", border: "1px solid rgba(0,212,255,0.3)" }}
-        >
-          <Shield size={18} color="var(--accent)" />
+        <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center border border-accent/30 group-hover:scale-110 transition-transform">
+          <Shield className="text-accent" size={24} />
         </div>
         <div>
-          <p className="text-sm font-bold tracking-wide" style={{ color: "var(--accent)" }}>
-            CyberShield
-          </p>
-          <p className="text-xs font-mono" style={{ color: "var(--muted)" }}>
-            AI Threat Detector
-          </p>
+          <h1 className="text-xl font-bold tracking-tight font-display">
+            Cyber<span className="text-accent">Shield</span>
+          </h1>
+          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-dim">Command Port</p>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map(({ to, icon: Icon, label }) => (
+      {/* Main Nav */}
+      <nav className="flex-1 space-y-2">
+        <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-text-dim mb-4">Core Systems</p>
+        {NAV_ITEMS.map((item) => (
           <NavLink
-            key={to}
-            to={to}
-            end={to === "/"}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                isActive ? "active-nav" : "hover:bg-white/5"
-              }`
-            }
-            style={({ isActive }) => ({
-              background: isActive ? "rgba(0,212,255,0.1)" : undefined,
-              color: isActive ? "var(--accent)" : "var(--muted)",
-              border: isActive ? "1px solid rgba(0,212,255,0.2)" : "1px solid transparent",
-            })}
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) => `
+              group flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300
+              ${isActive 
+                ? "bg-accent/10 border border-accent/20 text-accent" 
+                : "text-text-muted hover:bg-surface hover:text-text border border-transparent"}
+            `}
           >
-            <Icon size={18} />
-            {label}
+            <div className="flex items-center gap-3">
+              <item.icon size={18} className="transition-colors" />
+              <span className="text-sm font-semibold">{item.label}</span>
+            </div>
+            <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
           </NavLink>
         ))}
       </nav>
 
-      {/* Footer */}
-      <div
-        className="px-6 py-4 border-t"
-        style={{ borderColor: "var(--border)" }}
-      >
-        <div className="flex items-center gap-2">
-          <span className="status-dot w-2 h-2 rounded-full inline-block" style={{ background: "var(--green)" }} />
-          <span className="text-xs font-mono" style={{ color: "var(--muted)" }}>
-            Ensemble Model v1.0
-          </span>
+      {/* Footer Nav */}
+      <div className="pt-6 mt-6 border-t border-card-border space-y-2">
+        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-text-muted hover:bg-surface hover:text-text transition-all group border border-transparent">
+          <Settings size={18} className="group-hover:rotate-45 transition-transform" />
+          <span className="text-sm font-semibold">Settings</span>
+        </button>
+        <button 
+          onClick={() => navigate("/")}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all border border-transparent"
+        >
+          <LogOut size={18} />
+          <span className="text-sm font-semibold">Disconnect</span>
+        </button>
+      </div>
+
+      {/* User Mini Profile */}
+      <div className="mt-8 glass-card p-4 border-accent/20">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-emerald-400 p-[2px]">
+            <div className="w-full h-full rounded-full bg-bg flex items-center justify-center">
+              <span className="text-xs font-bold">KN</span>
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold truncate">Kwafo Nathaniel</p>
+            <p className="text-[10px] text-text-muted font-medium truncate">Principal Analyst</p>
+          </div>
         </div>
       </div>
     </aside>
   );
 }
+

@@ -4,55 +4,55 @@
  */
 
 import React from "react";
-import { AlertTriangle, Shield, Activity, Wifi, WifiOff } from "lucide-react";
+import { motion } from "framer-motion";
+import { AlertTriangle, Shield, Activity, Wifi, WifiOff, CheckCircle2 } from "lucide-react";
 
 // ─── Severity Config ──────────────────────────────────────────────────────────
 export const SEVERITY_CONFIG = {
-  critical: { color: "#ff3860", bg: "rgba(255,56,96,0.12)", label: "CRITICAL", icon: "🔴" },
-  high: { color: "#ff6b35", bg: "rgba(255,107,53,0.12)", label: "HIGH", icon: "🟠" },
-  medium: { color: "#ffcc00", bg: "rgba(255,204,0,0.12)", label: "MEDIUM", icon: "🟡" },
-  low: { color: "#00d4ff", bg: "rgba(0,212,255,0.12)", label: "LOW", icon: "🔵" },
-  none: { color: "#00ff88", bg: "rgba(0,255,136,0.08)", label: "NONE", icon: "🟢" },
+  critical: { color: "var(--red)", bg: "rgba(239, 68, 68, 0.1)", label: "CRITICAL", icon: "🔴" },
+  high: { color: "var(--orange)", bg: "rgba(249, 115, 22, 0.1)", label: "HIGH", icon: "🟠" },
+  medium: { color: "var(--yellow)", bg: "rgba(245, 158, 11, 0.1)", label: "MEDIUM", icon: "🟡" },
+  low: { color: "var(--accent)", bg: "rgba(99, 102, 241, 0.1)", label: "LOW", icon: "🔵" },
+  none: { color: "var(--green)", bg: "rgba(16, 185, 129, 0.1)", label: "NONE", icon: "🟢" },
 };
 
 export const LABEL_CONFIG = {
-  Malicious: { color: "#ff3860", bg: "rgba(255,56,96,0.15)", glow: "glow-red" },
-  Suspicious: { color: "#ffcc00", bg: "rgba(255,204,0,0.12)", glow: "" },
-  Normal: { color: "#00ff88", bg: "rgba(0,255,136,0.08)", glow: "glow-green" },
+  Malicious: { color: "var(--red)", bg: "rgba(239, 68, 68, 0.1)", glow: "shadow-red-500/20" },
+  Suspicious: { color: "var(--yellow)", bg: "rgba(245, 158, 11, 0.1)", glow: "shadow-amber-500/20" },
+  Normal: { color: "var(--green)", bg: "rgba(16, 185, 129, 0.1)", glow: "shadow-emerald-500/20" },
 };
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 export function StatCard({ title, value, icon: Icon, color, subtitle }) {
   return (
-    <div
-      className="relative overflow-hidden rounded-xl p-5 border"
-      style={{
-        background: "var(--card)",
-        borderColor: "var(--border)",
-      }}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -5 }}
+      className="glass-card p-6"
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-mono uppercase tracking-widest mb-2" style={{ color: "var(--muted)" }}>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim mb-3">
             {title}
           </p>
-          <p className="text-3xl font-bold font-mono" style={{ color }}>
+          <p className="text-3xl font-extrabold font-display leading-none mb-2" style={{ color }}>
             {value}
           </p>
           {subtitle && (
-            <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+            <p className="text-xs text-text-muted font-medium">
               {subtitle}
             </p>
           )}
         </div>
         <div
-          className="w-10 h-10 rounded-lg flex items-center justify-center"
-          style={{ background: `${color}20` }}
+          className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
+          style={{ background: `${color}15`, border: `1px solid ${color}30` }}
         >
-          <Icon size={20} color={color} />
+          <Icon size={22} style={{ color }} />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -61,8 +61,8 @@ export function AlertBadge({ label }) {
   const cfg = LABEL_CONFIG[label] || LABEL_CONFIG.Normal;
   return (
     <span
-      className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-mono font-semibold uppercase tracking-wider"
-      style={{ color: cfg.color, background: cfg.bg }}
+      className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border"
+      style={{ color: cfg.color, background: cfg.bg, borderColor: `${cfg.color}30` }}
     >
       {label}
     </span>
@@ -74,10 +74,10 @@ export function SeverityBadge({ severity }) {
   const cfg = SEVERITY_CONFIG[severity] || SEVERITY_CONFIG.none;
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-medium uppercase"
-      style={{ color: cfg.color, background: cfg.bg }}
+      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border"
+      style={{ color: cfg.color, background: cfg.bg, borderColor: `${cfg.color}30` }}
     >
-      <span>{cfg.icon}</span>
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.color }} />
       {cfg.label}
     </span>
   );
@@ -89,21 +89,21 @@ export function ConfidenceBar({ value, label }) {
   const cfg = LABEL_CONFIG[label] || LABEL_CONFIG.Normal;
   return (
     <div className="w-full">
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-xs font-mono" style={{ color: "var(--muted)" }}>
-          Confidence
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">
+          Threat Confidence
         </span>
-        <span className="text-xs font-mono font-semibold" style={{ color: cfg.color }}>
+        <span className="text-sm font-bold font-mono" style={{ color: cfg.color }}>
           {pct}%
         </span>
       </div>
-      <div
-        className="w-full h-1.5 rounded-full overflow-hidden"
-        style={{ background: "var(--border)" }}
-      >
-        <div
-          className="h-full rounded-full transition-all duration-700"
-          style={{ width: `${pct}%`, background: cfg.color }}
+      <div className="w-full h-2 bg-surface border border-card-border rounded-full overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="h-full rounded-full"
+          style={{ background: `linear-gradient(90deg, ${cfg.color}80, ${cfg.color})`, boxShadow: `0 0 10px ${cfg.color}40` }}
         />
       </div>
     </div>
@@ -116,33 +116,34 @@ export function AlertCard({ alert, isNew = false }) {
   const time = new Date(alert.timestamp).toLocaleTimeString();
 
   return (
-    <div
-      className={`rounded-xl p-4 border transition-all duration-300 ${isNew ? "alert-new" : ""}`}
-      style={{
-        background: severityCfg.bg,
-        borderColor: `${severityCfg.color}40`,
-      }}
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className={`glass-card p-5 mb-4 group transition-all duration-300 relative overflow-hidden`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <span className="text-lg mt-0.5 flex-shrink-0">{severityCfg.icon}</span>
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b" style={{ background: severityCfg.color }} />
+      
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4 min-w-0">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${severityCfg.color}10`, border: `1px solid ${severityCfg.color}20` }}>
+            <span className="text-lg">{severityCfg.icon}</span>
+          </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
+            <div className="flex items-center gap-3 flex-wrap mb-2">
               <AlertBadge label={alert.label} />
               <SeverityBadge severity={alert.severity} />
             </div>
-            <div className="flex gap-4 text-xs font-mono" style={{ color: "var(--muted)" }}>
-              {alert.source_ip && <span>SRC: {alert.source_ip}</span>}
-              {alert.destination_ip && <span>DST: {alert.destination_ip}</span>}
-              {alert.protocol && <span>{alert.protocol}</span>}
+            <div className="flex gap-4 text-[11px] font-medium text-text-dim">
+              {alert.source_ip && <span className="flex items-center gap-1.5"><Globe size={12} /> {alert.source_ip}</span>}
+              {alert.protocol && <span className="uppercase">{alert.protocol}</span>}
             </div>
           </div>
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="text-xs font-mono" style={{ color: "var(--muted)" }}>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim">
             {time}
           </p>
-          <p className="text-sm font-mono font-semibold mt-1" style={{ color: severityCfg.color }}>
+          <p className="text-xl font-bold font-display mt-1" style={{ color: severityCfg.color }}>
             {Math.round(alert.confidence * 100)}%
           </p>
         </div>
@@ -151,29 +152,26 @@ export function AlertCard({ alert, isNew = false }) {
       {/* Ensemble votes mini display */}
       {alert.ensemble_votes && (
         <div
-          className="mt-3 pt-3 grid grid-cols-3 gap-2 text-center border-t"
-          style={{ borderColor: `${severityCfg.color}20` }}
+          className="mt-5 pt-4 grid grid-cols-3 gap-3 border-t border-card-border"
         >
-          {[
-            ["RF", alert.ensemble_votes.random_forest],
-            ["IF", alert.ensemble_votes.isolation_forest],
-            ["LSTM", alert.ensemble_votes.lstm_autoencoder],
-          ].map(([name, vote]) => (
-            <div key={name}>
-              <p className="text-xs font-mono" style={{ color: "var(--muted)" }}>
-                {name}
-              </p>
-              <p
-                className="text-xs font-mono font-semibold"
-                style={{ color: LABEL_CONFIG[vote?.label]?.color || "var(--muted)" }}
-              >
-                {vote?.label || "—"}
-              </p>
-            </div>
-          ))}
+          {Object.entries(alert.ensemble_votes).map(([model, data]) => {
+            const modelName = model.split('_').map(w => w[0].toUpperCase()).join('');
+            const label = data.label || "Normal";
+            const cfg = LABEL_CONFIG[label] || LABEL_CONFIG.Normal;
+            return (
+              <div key={model} className="text-center">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-text-dim mb-1">
+                  {modelName}
+                </p>
+                <p className="text-[10px] font-bold" style={{ color: cfg.color }}>
+                  {label}
+                </p>
+              </div>
+            );
+          })}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -181,15 +179,15 @@ export function AlertCard({ alert, isNew = false }) {
 export function ConnectionStatus({ connected }) {
   return (
     <div
-      className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono"
+      className="flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest glass-card"
       style={{
-        background: connected ? "rgba(0,255,136,0.1)" : "rgba(255,56,96,0.1)",
-        border: `1px solid ${connected ? "rgba(0,255,136,0.3)" : "rgba(255,56,96,0.3)"}`,
-        color: connected ? "#00ff88" : "#ff3860",
+        background: connected ? "rgba(16, 185, 129, 0.05)" : "rgba(239, 68, 68, 0.05)",
+        borderColor: connected ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)",
+        color: connected ? "var(--green)" : "var(--red)",
       }}
     >
-      {connected ? <Wifi size={12} /> : <WifiOff size={12} />}
-      {connected ? "LIVE" : "POLLING"}
+      <div className={connected ? "pulse-dot bg-emerald-500" : "w-2 h-2 rounded-full bg-red-500"} />
+      {connected ? "Live System" : "Offline"}
     </div>
   );
 }
@@ -197,34 +195,24 @@ export function ConnectionStatus({ connected }) {
 // ─── Loading Spinner ──────────────────────────────────────────────────────────
 export function Spinner({ size = 24, color = "var(--accent)" }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{ animation: "spin 1s linear infinite" }}
-    >
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
+    <div className="flex items-center justify-center">
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        style={{ width: size, height: size, border: `2px solid ${color}20`, borderTop: `2px solid ${color}`, borderRadius: "50%" }}
+      />
+    </div>
   );
 }
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
 export function EmptyState({ message = "No data yet", icon: Icon = Shield }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-4">
-      <div
-        className="w-16 h-16 rounded-2xl flex items-center justify-center"
-        style={{ background: "rgba(0,212,255,0.08)", border: "1px solid rgba(0,212,255,0.15)" }}
-      >
-        <Icon size={28} color="var(--accent)" />
+    <div className="flex flex-col items-center justify-center py-16 gap-6 glass-card border-dashed">
+      <div className="w-20 h-20 rounded-3xl bg-surface flex items-center justify-center border border-card-border">
+        <Icon size={32} className="text-text-dim" />
       </div>
-      <p className="text-sm font-mono" style={{ color: "var(--muted)" }}>
+      <p className="text-sm font-medium text-text-muted">
         {message}
       </p>
     </div>
@@ -234,11 +222,11 @@ export function EmptyState({ message = "No data yet", icon: Icon = Shield }) {
 // ─── Section Header ───────────────────────────────────────────────────────────
 export function SectionHeader({ title, subtitle, action }) {
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center justify-between mb-8">
       <div>
-        <h2 className="text-base font-semibold tracking-wide">{title}</h2>
+        <h2 className="text-xl font-extrabold tracking-tight font-display">{title}</h2>
         {subtitle && (
-          <p className="text-xs font-mono mt-0.5" style={{ color: "var(--muted)" }}>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim mt-1.5">
             {subtitle}
           </p>
         )}
@@ -247,3 +235,4 @@ export function SectionHeader({ title, subtitle, action }) {
     </div>
   );
 }
+

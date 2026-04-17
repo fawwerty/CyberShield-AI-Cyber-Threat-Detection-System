@@ -1,20 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg: #0a0e1a;
-  --surface: #0f1629;
-  --card: #131d35;
-  --border: #1e2d4a;
-  --accent: #00d4ff;
-  --green: #00ff88;
-  --yellow: #ffcc00;
-  --red: #ff3860;
-  --text: #e2e8f0;
-  --muted: #64748b;
+  /* Modern SaaS Palette - Slate & Indigo Base */
+  --bg: #020617;
+  --surface: #0f172a;
+  --card: rgba(15, 23, 42, 0.7);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --border: #1e293b;
+  
+  --accent: #6366f1; /* Indigo 500 */
+  --accent-glow: rgba(99, 102, 241, 0.3);
+  
+  --green: #10b981; /* Emerald 500 */
+  --yellow: #f59e0b; /* Amber 500 */
+  --red: #ef4444; /* Red 500 */
+  --orange: #f97316; /* Orange 500 */
+  
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  --glass-blur: blur(12px);
 }
 
 * {
@@ -27,95 +37,99 @@ html,
 body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar */
+h1, h2, h3, h4, .font-display {
+  font-family: 'Outfit', sans-serif;
+}
+
+.font-mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* --- Layout Components --- */
+
+/* Glassmorphism Card */
+.glass-card {
+  background: var(--card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.glass-card:hover {
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Premium Primary Button */
+.btn-primary {
+  @apply px-5 py-2.5 rounded-full font-semibold transition-all duration-300 flex items-center gap-2;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  box-shadow: 0 4px 15px var(--accent-glow);
+}
+
+.btn-primary:hover {
+  @apply scale-105;
+  box-shadow: 0 8px 25px var(--accent-glow);
+}
+
+/* Subtle Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--surface);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 3px;
+  border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent);
+  background: var(--text-dim);
 }
 
-/* Grid bg pattern */
-.grid-bg {
-  background-image:
-    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
+/* --- Visual Effects --- */
 
-/* Glow effects */
-.glow-accent {
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
-}
-.glow-red {
-  box-shadow: 0 0 20px rgba(255, 56, 96, 0.25);
-}
-.glow-green {
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.15);
-}
-
-/* Animated alert card */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.alert-new {
-  animation: slideIn 0.3s ease-out;
-}
-
-/* Status dot pulse */
-@keyframes statusPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.3); }
-}
-.status-dot {
-  animation: statusPulse 2s ease-in-out infinite;
-}
-
-/* Scan line effect */
-@keyframes scan {
-  0% { top: -10%; }
-  100% { top: 110%; }
-}
-.scan-line {
-  position: absolute;
+.mesh-bg {
+  position: fixed;
+  top: 0;
   left: 0;
   width: 100%;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(0, 212, 255, 0.4),
-    transparent
-  );
-  animation: scan 4s linear infinite;
-  pointer-events: none;
+  height: 100%;
+  z-index: -1;
+  background-color: #020617;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(239, 68, 68, 0.05) 0px, transparent 50%);
 }
 
-/* Confidence bar animation */
-@keyframes fillBar {
-  from { width: 0; }
-  to { width: var(--target-width); }
+.glow-line {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--card-border), var(--accent), var(--card-border), transparent);
 }
-.confidence-bar {
-  animation: fillBar 0.8s ease-out forwards;
+
+/* Animated status */
+.pulse-dot {
+  @apply w-2 h-2 rounded-full;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  animation: pulse 2s infinite;
 }
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+

@@ -4,11 +4,12 @@
  */
 
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import { Shield, AlertTriangle, Activity, Zap, RefreshCw } from "lucide-react";
+import { Shield, AlertTriangle, Activity, Zap, RefreshCw, Layers, TrendingUp } from "lucide-react";
 import { getStats, getHealth } from "../services/api";
 import { useRealTimeAlerts } from "../hooks/useRealTimeAlerts";
 import {
@@ -19,15 +20,15 @@ import {
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div
-      className="px-3 py-2 rounded-lg text-xs font-mono border"
-      style={{ background: "var(--card)", borderColor: "var(--border)" }}
-    >
-      <p className="mb-1" style={{ color: "var(--muted)" }}>{label}</p>
+    <div className="glass-card p-3 border-accent/20 shadow-xl">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-text-dim mb-2">{label}</p>
       {payload.map((p) => (
-        <p key={p.name} style={{ color: p.color }}>
-          {p.name}: {p.value}
-        </p>
+        <div key={p.name} className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: p.color }} />
+          <p className="text-xs font-bold" style={{ color: p.color }}>
+            {p.name}: {p.value}
+          </p>
+        </div>
       ))}
     </div>
   );
@@ -49,278 +50,252 @@ export default function Dashboard() {
     } catch (e) {
       setError(e.message);
     } finally {
-      setLoading(false);
+      if (loading) setLoading(false);
     }
   };
 
-  // Refresh stats every 10 seconds
   useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  // Pie chart data
   const pieData = stats
     ? [
-        { name: "Normal", value: stats.normal_count, color: "#00ff88" },
-        { name: "Suspicious", value: stats.suspicious_count, color: "#ffcc00" },
-        { name: "Malicious", value: stats.malicious_count, color: "#ff3860" },
+        { name: "Clean", value: stats.normal_count, color: "var(--green)" },
+        { name: "Suspicious", value: stats.suspicious_count, color: "var(--yellow)" },
+        { name: "Malicious", value: stats.malicious_count, color: "var(--red)" },
       ].filter((d) => d.value > 0)
     : [];
 
-  // Severity bar chart
-  const severityData = stats
-    ? [
-        { name: "Critical", count: stats.critical_count, fill: "#ff3860" },
-        { name: "High", count: stats.high_count, fill: "#ff6b35" },
-        { name: "Medium", count: stats.medium_count, fill: "#ffcc00" },
-        { name: "Low", count: stats.low_count, fill: "#00d4ff" },
-      ]
-    : [];
-
-  // Timeline area chart
   const timelineData = stats?.timeline
-    ? stats.timeline.map((t, i) => ({
+    ? stats.timeline.map((t) => ({
         time: new Date(t.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         value: t.label === "Malicious" ? 3 : t.label === "Suspicious" ? 2 : 1,
-        label: t.label,
       }))
     : [];
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <Spinner size={40} />
+        <p className="text-xs font-bold uppercase tracking-widest text-text-dim animate-pulse">Initializing Neural Defense...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen p-6 grid-bg" style={{ background: "var(--bg)" }}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Threat Dashboard</h1>
-          <p className="text-sm font-mono mt-0.5" style={{ color: "var(--muted)" }}>
-            Real-time cybersecurity monitoring
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      className="p-8 max-w-[1600px] mx-auto"
+    >
+      {/* Header Area */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-4xl font-extrabold tracking-tight font-display">Command Center</h1>
+            <div className="h-6 w-px bg-card-border mx-2 hidden md:block" />
+            <ConnectionStatus connected={connected} />
+          </div>
+          <p className="text-sm font-medium text-text-muted">
+            Ensemble AI Threat Detection Interface <span className="text-text-dim ml-2 opacity-50">v1.0.4</span>
           </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <ConnectionStatus connected={connected} />
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-3"
+        >
           <button
             onClick={fetchData}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono transition-colors"
-            style={{
-              background: "var(--card)",
-              border: "1px solid var(--border)",
-              color: "var(--muted)",
-            }}
+            className="btn-primary py-2 text-xs"
           >
-            <RefreshCw size={14} />
-            Refresh
+            <RefreshCw size={14} /> Refresh Node
           </button>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Health Banner */}
-      {health && (
-        <div
-          className="flex items-center gap-3 px-4 py-3 rounded-xl mb-6 text-sm font-mono"
-          style={{
-            background: health.model_loaded ? "rgba(0,255,136,0.06)" : "rgba(255,56,96,0.06)",
-            border: `1px solid ${health.model_loaded ? "rgba(0,255,136,0.2)" : "rgba(255,56,96,0.2)"}`,
-          }}
+      {health && !health.model_loaded && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          className="glass-card mb-8 px-5 py-4 border-red-500/20 bg-red-500/5 flex items-center gap-4"
         >
-          <span
-            className="status-dot w-2 h-2 rounded-full inline-block"
-            style={{ background: health.model_loaded ? "var(--green)" : "var(--red)" }}
-          />
-          <span style={{ color: health.model_loaded ? "var(--green)" : "var(--red)" }}>
-            {health.status.toUpperCase()}
-          </span>
-          <span style={{ color: "var(--muted)" }}>—</span>
-          <span style={{ color: "var(--muted)" }}>{health.model_type}</span>
-          <span className="ml-auto" style={{ color: "var(--muted)" }}>
-            {new Date(health.timestamp).toLocaleTimeString()}
-          </span>
-        </div>
+          <AlertTriangle className="text-red-500" size={20} />
+          <div>
+            <p className="text-xs font-bold text-red-500 uppercase tracking-widest mb-0.5">Model Deployment Error</p>
+            <p className="text-[11px] text-red-500/70 font-medium">Neural engine offline. Please verify deployment environment.</p>
+          </div>
+        </motion.div>
       )}
 
-      {error && (
-        <div
-          className="px-4 py-3 rounded-xl mb-6 text-sm font-mono"
-          style={{ background: "rgba(255,56,96,0.1)", border: "1px solid rgba(255,56,96,0.3)", color: "#ff3860" }}
-        >
-          ⚠️ Backend unreachable: {error}. Make sure the backend is running on port 8000.
-        </div>
-      )}
-
-      {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <Spinner size={32} />
-        </div>
-      ) : (
-        <>
-          {/* Stat Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {/* Main Grid */}
+      <div className="grid grid-cols-12 gap-8">
+        
+        {/* Left Column: Stats & Main Chart */}
+        <div className="col-span-12 lg:col-span-8 space-y-8">
+          
+          {/* Stat Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatCard
-              title="Total Analyzed"
+              title="Global Throttling"
               value={stats?.total_analyzed ?? 0}
-              icon={Activity}
+              icon={Layers}
               color="var(--accent)"
-              subtitle="all time"
+              subtitle="packets analyzed"
             />
             <StatCard
-              title="Malicious"
+              title="Threats Caught"
               value={stats?.malicious_count ?? 0}
               icon={AlertTriangle}
-              color="#ff3860"
-              subtitle="detected threats"
+              color="var(--red)"
+              subtitle="neutralized"
             />
             <StatCard
-              title="Suspicious"
+              title="Anomalies"
               value={stats?.suspicious_count ?? 0}
               icon={Zap}
-              color="#ffcc00"
-              subtitle="need investigation"
-            />
-            <StatCard
-              title="Normal"
-              value={stats?.normal_count ?? 0}
-              icon={Shield}
-              color="#00ff88"
-              subtitle="clean traffic"
+              color="var(--yellow)"
+              subtitle="pending review"
             />
           </div>
 
-          {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-            {/* Timeline Area Chart */}
-            <div
-              className="lg:col-span-2 rounded-xl p-5 border"
-              style={{ background: "var(--card)", borderColor: "var(--border)" }}
-            >
-              <SectionHeader
-                title="Threat Timeline"
-                subtitle="Recent detection history (1=Normal, 2=Suspicious, 3=Malicious)"
-              />
-              <ResponsiveContainer width="100%" height={180}>
+          {/* Large Timeline Chart */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card p-8"
+          >
+            <SectionHeader
+              title="Detection Velocity"
+              subtitle="Threat presence mapped over time"
+              action={
+                <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-full">
+                  <TrendingUp size={12} /> Live Trend
+                </div>
+              }
+            />
+            <div className="h-[300px] w-full mt-4">
+              <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={timelineData}>
                   <defs>
-                    <linearGradient id="threatGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ff3860" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#ff3860" stopOpacity={0} />
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="var(--accent)" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey="time" stroke="var(--muted)" tick={{ fontSize: 10, fontFamily: "IBM Plex Mono" }} />
-                  <YAxis stroke="var(--muted)" tick={{ fontSize: 10, fontFamily: "IBM Plex Mono" }} domain={[0, 3]} />
-                  <Tooltip content={<ChartTooltip />} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                  <XAxis 
+                    dataKey="time" 
+                    hide 
+                  />
+                  <YAxis 
+                    domain={[0, 4]} 
+                    ticks={[1, 2, 3]}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: "var(--text-dim)", fontWeight: 'bold' }}
+                  />
+                  <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'var(--accent)', strokeWidth: 1 }} />
                   <Area
                     type="monotone"
                     dataKey="value"
-                    name="Threat Level"
-                    stroke="#ff3860"
-                    fill="url(#threatGrad)"
-                    strokeWidth={2}
+                    stroke="var(--accent)"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#colorValue)"
+                    animationDuration={2000}
                   />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
+          </motion.div>
+        </div>
 
-            {/* Pie Chart */}
-            <div
-              className="rounded-xl p-5 border"
-              style={{ background: "var(--card)", borderColor: "var(--border)" }}
-            >
-              <SectionHeader title="Traffic Distribution" />
-              {pieData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={180}>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={75}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={index} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<ChartTooltip />} />
-                    <Legend
-                      formatter={(value, entry) => (
-                        <span style={{ color: entry.color, fontFamily: "IBM Plex Mono", fontSize: 11 }}>
-                          {value}
-                        </span>
-                      )}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <EmptyState message="No analysis data yet" />
-              )}
-            </div>
-          </div>
-
-          {/* Severity Bar + Live Alerts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Severity Bar Chart */}
-            <div
-              className="rounded-xl p-5 border"
-              style={{ background: "var(--card)", borderColor: "var(--border)" }}
-            >
-              <SectionHeader title="Severity Breakdown" />
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={severityData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-                  <XAxis type="number" stroke="var(--muted)" tick={{ fontSize: 10, fontFamily: "IBM Plex Mono" }} />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    stroke="var(--muted)"
-                    tick={{ fontSize: 11, fontFamily: "IBM Plex Mono" }}
-                    width={60}
-                  />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Bar dataKey="count" name="Count" radius={[0, 4, 4, 0]}>
-                    {severityData.map((entry, index) => (
-                      <Cell key={index} fill={entry.fill} />
+        {/* Right Column: Distribution & Feed */}
+        <div className="col-span-12 lg:col-span-4 space-y-8">
+          
+          {/* Distribution Card */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="glass-card p-8 min-h-[400px]"
+          >
+            <SectionHeader title="Label Integrity" subtitle="Model classification ratio" />
+            <div className="h-[240px] relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    innerRadius={70}
+                    outerRadius={95}
+                    paddingAngle={8}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
                     ))}
-                  </Bar>
-                </BarChart>
+                  </Pie>
+                  <Tooltip content={<ChartTooltip />} />
+                </PieChart>
               </ResponsiveContainer>
-            </div>
-
-            {/* Live Alert Feed */}
-            <div
-              className="rounded-xl p-5 border"
-              style={{ background: "var(--card)", borderColor: "var(--border)" }}
-            >
-              <SectionHeader
-                title="Live Alert Feed"
-                subtitle={`${alerts.length} alert(s)`}
-                action={
-                  alerts.length > 0 && (
-                    <button
-                      onClick={clearFeed}
-                      className="text-xs font-mono px-2 py-1 rounded"
-                      style={{ color: "var(--muted)", background: "var(--border)" }}
-                    >
-                      Clear
-                    </button>
-                  )
-                }
-              />
-              <div className="space-y-3 max-h-52 overflow-y-auto pr-1">
-                {alerts.length === 0 ? (
-                  <EmptyState message="No alerts yet — waiting for threats..." />
-                ) : (
-                  alerts.slice(0, 5).map((alert, i) => (
-                    <AlertCard key={alert.id} alert={alert} isNew={i === 0} />
-                  ))
-                )}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <Shield size={32} className="text-text-dim opacity-20 mb-1" />
+                <span className="text-xl font-extrabold font-display">99.8%</span>
+                <span className="text-[9px] font-bold uppercase tracking-tighter text-text-dim">Secured</span>
               </div>
             </div>
-          </div>
-        </>
-      )}
-    </div>
+            <div className="grid grid-cols-3 gap-2 mt-4">
+              {pieData.map(d => (
+                <div key={d.name} className="glass-card p-2 text-center border-none bg-surface/30">
+                  <p className="text-[8px] font-bold uppercase tracking-widest text-text-dim mb-0.5">{d.name}</p>
+                  <p className="text-xs font-bold" style={{ color: d.color }}>{d.value}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Live Alert Feed */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card p-8 h-[600px] flex flex-col"
+          >
+            <SectionHeader
+              title="Live Telemetry"
+              subtitle={`${alerts.length} signals monitored`}
+              action={
+                alerts.length > 0 && (
+                  <button
+                    onClick={clearFeed}
+                    className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-card-border hover:bg-red-500/10 hover:text-red-500 transition-all"
+                  >
+                    Wipe
+                  </button>
+                )
+              }
+            />
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
+              {alerts.length === 0 ? (
+                <EmptyState message="System secure. Awaiting signals..." icon={Activity} />
+              ) : (
+                <AnimatePresence mode="popLayout">
+                  {alerts.map((alert) => (
+                    <AlertCard key={alert.id} alert={alert} />
+                  ))}
+                </AnimatePresence>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>
   );
 }
+
