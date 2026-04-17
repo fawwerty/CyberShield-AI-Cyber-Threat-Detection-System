@@ -18,8 +18,9 @@ services:
         value: 3.10.0
 
   # ─── Frontend Service (React + Vite) ───────────────────────────────────────
-  - type: static_site
+  - type: web
     name: cybershield-web
+    static: true
     rootDir: frontend
     plan: free
     buildCommand: npm install && npm run build
