@@ -15,13 +15,11 @@ services:
         value: cybershield
 
 staticSites:
-  - name: cybershield-web
+  - type: static
+    name: cybershield-web
     rootDir: frontend
     buildCommand: npm install && npm run build
     publishPath: dist
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: cybershield-api
-          property: host
+        value: https://cybershield-api.onrender.com
