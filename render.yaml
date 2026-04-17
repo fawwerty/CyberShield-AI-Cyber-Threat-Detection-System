@@ -14,10 +14,9 @@ services:
       - key: DB_NAME
         value: cybershield
 
-  - type: static_site
-    name: cybershield-web
+staticSites:
+  - name: cybershield-web
     rootDir: frontend
-    plan: free
     buildCommand: npm install && npm run build
     publishPath: dist
     envVars:
