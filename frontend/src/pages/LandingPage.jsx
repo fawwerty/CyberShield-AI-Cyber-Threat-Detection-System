@@ -48,9 +48,9 @@ export default function LandingPage() {
               variants={fadeInUp}
               className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight mb-6"
             >
-              Detect Threats <br />
+              Secure With <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-emerald-400">
-                In Real-Time
+                CyberShield AI
               </span>
             </motion.h1>
             <motion.p 
@@ -125,7 +125,7 @@ export default function LandingPage() {
             {[
               { 
                 icon: Zap, 
-                title: "Ensemble Power", 
+                title: "CyberShield Analytics", 
                 desc: "Random Forest + Isolation Forest + LSTM models working in perfect harmony.",
                 color: "indigo"
               },
@@ -173,6 +173,7 @@ export default function LandingPage() {
               { label: "Integrations", value: "250+" },
             ].map((stat, i) => (
               <div key={i}>
+                <h1 className="text-4xl font-extrabold tracking-tight font-display">CyberShield <span className="text-accent underline decoration-accent/20">Command</span></h1>
                 <p className="text-4xl font-extrabold mb-2 font-display text-accent">{stat.value}</p>
                 <p className="text-xs uppercase tracking-widest text-text-muted font-bold">{stat.label}</p>
               </div>

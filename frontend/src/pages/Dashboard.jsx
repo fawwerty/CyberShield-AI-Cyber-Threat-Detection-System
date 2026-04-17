@@ -97,7 +97,7 @@ export default function Dashboard() {
           animate={{ opacity: 1, x: 0 }}
         >
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-4xl font-extrabold tracking-tight font-display">Command Center</h1>
+            <h1 className="text-4xl font-extrabold tracking-tight font-display">CyberShield <span className="text-accent underline decoration-accent/20">Command</span></h1>
             <div className="h-6 w-px bg-card-border mx-2 hidden md:block" />
             <ConnectionStatus connected={connected} />
           </div>

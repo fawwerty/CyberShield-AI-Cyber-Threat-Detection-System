@@ -1,4 +1,4 @@
-﻿node_modules/
+node_modules/
 .venv/
 __pycache__/
 *.pkl
@@ -7,3 +7,5 @@ __pycache__/
 *.bin
 .expo/
 *.log
+data/
+model/pretrained/
