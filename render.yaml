@@ -1,3 +1,4 @@
+version: "1"
 services:
   - type: web
     name: cybershield-api
@@ -13,10 +14,11 @@ services:
         generateValue: true
       - key: DB_NAME
         value: cybershield
+      - key: PYTHON_VERSION
+        value: 3.10.0
 
 staticSites:
-  - type: static
-    name: cybershield-web
+  - name: cybershield-web
     rootDir: frontend
     buildCommand: npm install && npm run build
     publishPath: dist
