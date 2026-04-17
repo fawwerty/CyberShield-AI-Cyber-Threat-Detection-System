@@ -18,7 +18,6 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Features", href: "#features" },
-    { name: "Technology", href: "#tech" },
     { name: "Stats", href: "#stats" },
   ];
 

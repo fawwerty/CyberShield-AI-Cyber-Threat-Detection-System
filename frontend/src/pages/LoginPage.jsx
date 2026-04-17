@@ -64,7 +64,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-text-dim ml-1">Email Address</label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors pointer-events-none" size={18} />
                  <input 
                   type="email" 
                   required
@@ -82,7 +82,7 @@ export default function LoginPage() {
                 <a href="#" className="text-xs font-medium text-accent hover:underline">Forgot?</a>
               </div>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors pointer-events-none" size={18} />
                  <input 
                   type={showPassword ? "text" : "password"} 
                   required

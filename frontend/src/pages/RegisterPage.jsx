@@ -71,7 +71,7 @@ export default function RegisterPage() {
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-text-dim ml-1">First Name</label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors pointer-events-none" size={18} />
                    <input 
                     type="text" 
                     required
@@ -85,7 +85,7 @@ export default function RegisterPage() {
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-text-dim ml-1">Last Name</label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors pointer-events-none" size={18} />
                    <input 
                     type="text" 
                     required
@@ -101,7 +101,7 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-text-dim ml-1">Email Address</label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors pointer-events-none" size={18} />
                  <input 
                   type="email" 
                   required
@@ -116,7 +116,7 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-text-dim ml-1">Password</label>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors" size={18} />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-dim group-focus-within:text-accent transition-colors pointer-events-none" size={18} />
                  <input 
                   type="password" 
                   required

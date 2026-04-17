@@ -109,11 +109,12 @@ h1, h2, h3, h4, .font-display {
   background-color: #020617;
   background-image: 
     linear-gradient(to bottom, rgba(2, 6, 23, 0.5), rgba(2, 6, 23, 0.7)),
-    url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=2000');
+    url('/bg-network.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
 }
+
 
 
 .glow-line {
